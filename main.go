@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -34,14 +35,22 @@ func faqHandler(w http.ResponseWriter, r *http.Request) {
 	`)
 }
 
+func faqHandlerTwo(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	id := chi.URLParam(r, "id")
+	log.Println(id)
+	fmt.Fprint(w, id)
+}
+
 func main() {
 
 	mainRouter := chi.NewRouter()
-
+	mainRouter.Use(middleware.Logger)
 	// Gets
 	mainRouter.Get("/", homeHandler)
 	mainRouter.Get("/contact", contactHandler)
 	mainRouter.Get("/faq", faqHandler)
+	mainRouter.Get("/test/{id}", faqHandlerTwo)
 
 
 
