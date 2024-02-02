@@ -1,1 +1,6 @@
-<h1>Weclome to my site!</h1>
+
+{{ if . }}
+    <p> Hello {{ .Name }}, your age is {{ .Age }} and your Favorite Food is {{ .FavFood.Food }}</p>
+{{ else }}
+    <p> Hello! Weclome to the site </p>
+{{ end }}

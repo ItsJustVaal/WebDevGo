@@ -10,9 +10,25 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
+type Data struct {
+	Food string
+}
 
 func executeTemplate(w http.ResponseWriter, fp string) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	user := struct{
+		Name string
+		Age int
+		FavFood Data
+	}{
+		Name: "James",
+		Age: 22,
+		FavFood: Data{
+			Food: "Pizza",
+		},
+	}
+
 	tpl, err := template.ParseFiles(fp)
 	if err != nil {
 		log.Printf("Error parsing template: %v", err.Error())
@@ -20,7 +36,7 @@ func executeTemplate(w http.ResponseWriter, fp string) {
 		return
 	}
 
-	err = tpl.Execute(w, nil)
+	err = tpl.Execute(w, user)
 	if err != nil {
 		log.Printf("Error executing template: %v", err.Error())
 		http.Error(w, "Invalid data passed to execute", http.StatusInternalServerError)
