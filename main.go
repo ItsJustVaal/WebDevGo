@@ -1,56 +1,58 @@
 package main
 
 import (
-	"fmt"
+	"html/template"
 	"log"
 	"net/http"
+	"path/filepath"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
+
+func executeTemplate(w http.ResponseWriter, fp string) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprint(w, "<h1> Welcome to my site </h1>")
+	tpl, err := template.ParseFiles(fp)
+	if err != nil {
+		log.Printf("Error parsing template: %v", err.Error())
+		http.Error(w, "There was an error Parsing", http.StatusInternalServerError)
+		return
+	}
+
+	err = tpl.Execute(w, nil)
+	if err != nil {
+		log.Printf("Error executing template: %v", err.Error())
+		http.Error(w, "Invalid data passed to execute", http.StatusInternalServerError)
+		return
+	}
+}
+
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	executeTemplate(w, filepath.Join("templates", "home.gohtml"))
 }
 
 func contactHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprint(w, "<h1> Contact Page </h1><p> To get in touch, email me at <a href=\"mailto:robmmar90@gmail.com\">Robmmar90@gmail.com</a></p>")
+	executeTemplate(w, filepath.Join("templates", "contact.gohtml"))
 }
 
 func faqHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprint(w, `
-	<h1>FAQs</h1> 
-	<ul>
-		<li>Q: Is there a free version?</li> 
-		<li>A: Yes! We offer a free trial for 30 days on any paid plans</li>
-		&nbsp 
-		<li>Q: What are your support hours?</li> 
-		<li>A: We support staff answering emails 24/7, though response times may be a bit slower on weekends</li>
-		&nbsp
-		<li>Q: How do I contact support?</li> 
-		<li>A: Email us - <a href=/contact>Robmmar90@gmail.com</a></li>
-	`)
+	executeTemplate(w, filepath.Join("templates", "faq.gohtml"))
 }
 
-func faqHandlerTwo(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	id := chi.URLParam(r, "id")
-	log.Println(id)
-	fmt.Fprint(w, id)
-}
 
 func main() {
-
 	mainRouter := chi.NewRouter()
 	mainRouter.Use(middleware.Logger)
+	mainRouter.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "Page not found", http.StatusNotFound)
+	})
+
+	
 	// Gets
 	mainRouter.Get("/", homeHandler)
 	mainRouter.Get("/contact", contactHandler)
 	mainRouter.Get("/faq", faqHandler)
-	mainRouter.Get("/test/{id}", faqHandlerTwo)
 
 
 
