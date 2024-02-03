@@ -1,5 +1,5 @@
-{{ if . }}
-    <p> Hello {{ .Name }}, your age is {{ .Age }} and your Favorite Food is {{ .FavFood.Food }}</p>
-{{ else }}
-    <p> Hello! Weclome to the site </p>
-{{ end }}
+{{ template "header" .}}
+<div class="px-6">
+  <h1 class="py-4 text-4xl semibold tracking-tight">Welcome</h1>
+</div>
+{{ template "footer" .}}
