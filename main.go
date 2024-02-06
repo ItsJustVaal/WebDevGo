@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ItsJustVaal/WebDevGo/controllers"
+	"github.com/ItsJustVaal/WebDevGo/models"
 	"github.com/ItsJustVaal/WebDevGo/templates"
 	"github.com/ItsJustVaal/WebDevGo/views"
 	"github.com/go-chi/chi/v5"
@@ -18,12 +19,28 @@ func main() {
 		http.Error(w, "Page not found", http.StatusNotFound)
 	})
 
+	// DB init
+	cfg := models.DefaultConfig()
+	db, err := models.Open(cfg)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+	
 	
 	// Users controller
-	usersC := controllers.Users{}
+	userService := models.UserService{
+		DB: db,
+	}
+	usersC := controllers.Users{
+		UserService: &userService,
+	}
 	usersC.Templates.New = views.Must(views.ParseFS(templates.FS, "signup.gohtml", "tailwind.gohtml"))
+	usersC.Templates.SignIn = views.Must(views.ParseFS(templates.FS, "signin.gohtml", "tailwind.gohtml"))
 	mainRouter.Get("/signup", usersC.New)
+	mainRouter.Get("/signin", usersC.SignIn)
 	mainRouter.Post("/users", usersC.Create)
+	mainRouter.Post("/signin", usersC.ProcessSignIn)
 
 
 
