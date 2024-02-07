@@ -5,6 +5,7 @@
       Welcome Back
     </h1>
     <form action="/signin" method="post">
+      <div class="hidden">{{ csrfField }}</div>
       <div class="py-2">
         <input type="hidden" name="csrf" value="" />
         <label class="text-sm font-semibold text-gray-800">Email Address</label>
