@@ -10,6 +10,7 @@ import (
 	"github.com/ItsJustVaal/WebDevGo/views"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/gorilla/csrf"
 )
 
 func main() {
@@ -26,10 +27,10 @@ func main() {
 		panic(err)
 	}
 	defer db.Close()
-	
+
 	// Root
 	mainRouter.Get("/", controllers.StaticHandler(views.Must(views.ParseFS(templates.FS, "home.gohtml", "tailwind.gohtml"))))
-	
+
 	// Users controller
 	userService := models.UserService{
 		DB: db,
@@ -49,17 +50,10 @@ func main() {
 	mainRouter.Post("/users", usersC.Create)
 	mainRouter.Post("/signin", usersC.ProcessSignIn)
 
-
-
-
-	
 	mainRouter.Get("/contact", controllers.StaticHandler(views.Must(views.ParseFS(templates.FS, "contact.gohtml", "tailwind.gohtml"))))
 	mainRouter.Get("/faq", controllers.FAQ(views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))))
 
-
-
-
-
-
-	log.Fatal(http.ListenAndServe(":3000", mainRouter))
+	csrft := "apwfWAAw0f8AWfafwareaweaAfwWAg9W2Lkf"
+	csrfMW := csrf.Protect([]byte(csrft), csrf.Secure(false))
+	log.Fatal(http.ListenAndServe(":3000", csrfMW(mainRouter)))
 }

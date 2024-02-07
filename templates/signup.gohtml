@@ -5,6 +5,7 @@
       Start sharing today!
     </h1>
     <form action="/users" method="post">
+      <div class="hidden">{{ csrfField }}</div>
       <div class="py-2">
         <label class="text-sm font-semibold text-gray-800">Email Address</label>
         <input
@@ -26,19 +27,6 @@
           id="password"
           type="password"
           placeholder="Enter a password"
-          required
-        />
-      </div>
-      <div class="py-2">
-        <label class="text-sm font-semibold text-gray-800"
-          >Verify Password</label
-        >
-        <input
-          class="w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-800 rounded"
-          name="vpassword"
-          id="vpassword"
-          type="vpassword"
-          placeholder="Enter the same password"
           required
         />
       </div>
