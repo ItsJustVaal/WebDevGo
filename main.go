@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ItsJustVaal/WebDevGo/controllers"
+	"github.com/ItsJustVaal/WebDevGo/migrations"
 	"github.com/ItsJustVaal/WebDevGo/models"
 	"github.com/ItsJustVaal/WebDevGo/templates"
 	"github.com/ItsJustVaal/WebDevGo/views"
@@ -28,7 +29,7 @@ func main() {
 	}
 	defer db.Close()
 
-	err = models.Migrate(db, "migrations")
+	err = models.MigrateFS(db, migrations.FS, ".")
 	if err != nil {
 		panic(err)
 	}
