@@ -54,6 +54,7 @@ func main() {
 	// User Posts
 	mainRouter.Post("/users", usersC.Create)
 	mainRouter.Post("/signin", usersC.ProcessSignIn)
+	mainRouter.Post("/signout", usersC.ProcessSignOut)
 
 	mainRouter.Get("/contact", controllers.StaticHandler(views.Must(views.ParseFS(templates.FS, "contact.gohtml", "tailwind.gohtml"))))
 	mainRouter.Get("/faq", controllers.FAQ(views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))))

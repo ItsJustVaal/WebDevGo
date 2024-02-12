@@ -24,6 +24,12 @@
           >
         </div>
         <div>
+          <form action="/signout" method="post" class="inline pr-4">
+            <div class="hidden">
+              {{ csrfField }}
+            </div>
+            <button type="submit">Sign Out</button>
+          </form>
           <a class="pr-4" href="/signin">Sign In</a>
           <a
             class="px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded"
