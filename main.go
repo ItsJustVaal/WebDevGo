@@ -15,12 +15,6 @@ import (
 )
 
 func main() {
-	mainRouter := chi.NewRouter()
-	mainRouter.Use(middleware.Logger)
-	mainRouter.NotFound(func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, "Page not found", http.StatusNotFound)
-	})
-
 	// DB init
 	cfg := models.DefaultConfig()
 	db, err := models.Open(cfg)
@@ -34,10 +28,7 @@ func main() {
 		panic(err)
 	}
 
-	// Root
-	mainRouter.Get("/", controllers.StaticHandler(views.Must(views.ParseFS(templates.FS, "home.gohtml", "tailwind.gohtml"))))
-
-	// Users controller
+	// Services init
 	userService := models.UserService{
 		DB: db,
 	}
@@ -52,20 +43,35 @@ func main() {
 	usersC.Templates.New = views.Must(views.ParseFS(templates.FS, "signup.gohtml", "tailwind.gohtml"))
 	usersC.Templates.SignIn = views.Must(views.ParseFS(templates.FS, "signin.gohtml", "tailwind.gohtml"))
 
-	// User Gets
-	mainRouter.Get("/signup", usersC.New)
-	mainRouter.Get("/signin", usersC.SignIn)
-	mainRouter.Get("/users/me", usersC.CurrentUser)
-
-	// User Posts
-	mainRouter.Post("/users", usersC.Create)
-	mainRouter.Post("/signin", usersC.ProcessSignIn)
-	mainRouter.Post("/signout", usersC.ProcessSignOut)
-
-	mainRouter.Get("/contact", controllers.StaticHandler(views.Must(views.ParseFS(templates.FS, "contact.gohtml", "tailwind.gohtml"))))
-	mainRouter.Get("/faq", controllers.FAQ(views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))))
+	// Middlewear
+	umw := controllers.UserMiddlewear{
+		SessionService: &sessionService,
+	}
 
 	csrft := "apwfWAAw0f8AWfafwareaweaAfwWAg9W2Lkf"
 	csrfMW := csrf.Protect([]byte(csrft), csrf.Secure(false))
-	log.Fatal(http.ListenAndServe(":3000", csrfMW(mainRouter)))
+
+	mainRouter := chi.NewRouter()
+	mainRouter.Use(csrfMW, umw.SetUser, middleware.Logger)
+
+	mainRouter.Get("/", controllers.StaticHandler(views.Must(views.ParseFS(templates.FS, "home.gohtml", "tailwind.gohtml"))))
+	mainRouter.Get("/contact", controllers.StaticHandler(views.Must(views.ParseFS(templates.FS, "contact.gohtml", "tailwind.gohtml"))))
+	mainRouter.Get("/faq", controllers.FAQ(views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))))
+
+	// User Routes
+	mainRouter.Get("/signup", usersC.New)
+	mainRouter.Get("/signin", usersC.SignIn)
+	mainRouter.Post("/users", usersC.Create)
+	mainRouter.Post("/signin", usersC.ProcessSignIn)
+	mainRouter.Post("/signout", usersC.ProcessSignOut)
+	mainRouter.Route("/users/me", func(r chi.Router) {
+		r.Use(umw.RequireUser)
+		r.Get("/", usersC.CurrentUser)
+	})
+
+	mainRouter.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "Page not found", http.StatusNotFound)
+	})
+
+	log.Fatal(http.ListenAndServe(":3000", mainRouter))
 }
