@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/ItsJustVaal/WebDevGo/context"
 	"github.com/ItsJustVaal/WebDevGo/models"
@@ -10,11 +11,16 @@ import (
 
 type Users struct {
 	Templates struct {
-		New    Template
-		SignIn Template
+		New            Template
+		SignIn         Template
+		ForgotPassword Template
+		CheckYourEmail Template
+		ResetPassword  Template
 	}
-	UserService    *models.UserService
-	SessionService *models.SessionService
+	UserService          *models.UserService
+	SessionService       *models.SessionService
+	PasswordResetService *models.PasswordResetService
+	EmailService         *models.EmailService
 }
 
 func (u Users) New(w http.ResponseWriter, r *http.Request) {
@@ -99,6 +105,76 @@ func (u Users) CurrentUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Fprintf(w, "Current user: %s\n", user.Email)
+}
+
+func (u Users) ForgotPassword(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		Email string
+	}
+	data.Email = r.FormValue("email")
+	u.Templates.ForgotPassword.Execute(w, r, data)
+}
+
+func (u Users) ProcessForgotPassword(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		Email string
+	}
+	data.Email = r.FormValue("email")
+	pwReset, err := u.PasswordResetService.Create(data.Email)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
+	vals := url.Values{
+		"token": {pwReset.Token},
+	}
+	resetURL := "https://www.resetyourpassword.com/reset-pw?" + vals.Encode()
+	err = u.EmailService.ForgotPassword(data.Email, resetURL)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
+	u.Templates.CheckYourEmail.Execute(w, r, data)
+}
+
+func (u Users) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		Token string
+	}
+	data.Token = r.FormValue("token")
+	u.Templates.ResetPassword.Execute(w, r, data)
+}
+
+func (u Users) ProcessResetPassword(w http.ResponseWriter, r *http.Request) {
+	var data struct {
+		Token    string
+		Password string
+	}
+	data.Token = r.FormValue("token")
+	data.Password = r.FormValue("password")
+	user, err := u.PasswordResetService.Consume(data.Token)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
+	err = u.UserService.UpdatePassword(user.ID, data.Password)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
+	session, err := u.SessionService.Create(user.ID)
+	if err != nil {
+		fmt.Println(err)
+		http.Redirect(w, r, "/signin", http.StatusFound)
+		return
+	}
+	SetCookie(w, CookieSession, session.Token)
+	http.Redirect(w, r, "/users/me", http.StatusFound)
+
 }
 
 type UserMiddlewear struct {

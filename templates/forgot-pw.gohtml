@@ -2,11 +2,15 @@
 <div class="py-12 flex justify-center">
   <div class="px-8 py-8 bg-white rounded shadow">
     <h1 class="pt-4 pb-8 text-center text-3xl font-bold text-gray-800">
-      Start sharing today!
+      Forgot Your Password?
     </h1>
-    <form action="/users" method="post">
+    <p class="text-sm text-gray-600 pb-4">
+      No Problem. Enter your email address below to reset your password
+    </p>
+    <form action="/forgot-pw" method="post">
       <div class="hidden">{{ csrfField }}</div>
       <div class="py-2">
+        <input type="hidden" name="csrf" value="" />
         <label class="text-sm font-semibold text-gray-800">Email Address</label>
         <input
           class="w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-800 rounded"
@@ -17,32 +21,23 @@
           autocomplete="email"
           autofocus
           required
-        />
-      </div>
-      <div class="py-2">
-        <label class="text-sm font-semibold text-gray-800">Password</label>
-        <input
-          class="w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-800 rounded"
-          name="password"
-          id="password"
-          type="password"
-          placeholder="Enter a password"
-          required
+          value="{{ .Email }}"
         />
       </div>
       <div class="py-4">
         <button
+          type="submit"
           class="w-full py-4 px-2 bg-indigo-600 hover:bg-indigo-700 font-bold rounded text-lg text-white"
         >
-          Sign Up
+          Reset Password
         </button>
       </div>
       <div class="py-2 w-full flex justify-between">
         <p class="text-xs text-gray-500">
-          Already Signed Up? <a href="/signin" class="underline">Sign in</a>
+          Dont have an account? <a href="/signup" class="underline">Sign Up</a>
         </p>
         <p class="text-xs text-gray-500">
-          <a href="/forgot-pw" class="underline">Forgot Password </a>
+          <a href="/signin" class="underline">Sign In</a>
         </p>
       </div>
     </form>

@@ -26,9 +26,8 @@ func (us *UserService) Create(email, password string) (*User, error) {
 	}
 	passwordHash := string(hashed)
 
-
 	user := User{
-		Email: email,
+		Email:        email,
 		PasswordHash: passwordHash,
 	}
 	row := us.DB.QueryRow(`INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id`, email, passwordHash)
@@ -56,4 +55,21 @@ func (us *UserService) Authenticate(email, password string) (*User, error) {
 		return nil, fmt.Errorf("wrong password: %w", err)
 	}
 	return &user, nil
+}
+
+func (us *UserService) UpdatePassword(userID int, password string) error {
+	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("update password: %w", err)
+	}
+	passwordHash := string(hashed)
+	_, err = us.DB.Exec(`
+		UPDATE users
+		SET password_hash = $2
+		WHERE id = $1
+	`, userID, passwordHash)
+	if err != nil {
+		return fmt.Errorf("update password: %w", err)
+	}
+	return nil
 }
